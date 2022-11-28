@@ -1,3 +1,7 @@
+###############################################.
+## ScotPHO - Life expectancy - NHS Board ----
+###############################################.
+
 # Code to create shiny chart of trends in life expectancy and healthy life expectancy by NHS Board 
 # This is published in the following section of the ScotPHO website: 
 # Population Dynamics > Deaths and life expectancy > Data > NHS Boards
@@ -11,14 +15,13 @@
 library(dplyr) #data manipulation
 library(plotly) #charts
 library(shiny) #shiny apps
-library(readr) #reading csvs
 
 # Data file
-hb_trend <- read_csv("data/trends_le_hle_hb.csv")
+hb_trend <- readRDS("data/le_hle_hb.rds")
 
 # Use for selection of areas
-#board_list <- sort(unique(hb_trend$nhsboard[hb_trend$nhsboard != "Scotland"]))
-board_list <- sort(unique(hb_trend$nhsboard))
+board_list <- sort(unique(hb_trend$nhsboard[hb_trend$nhsboard != "Scotland"]))
+#board_list <- sort(unique(hb_trend$nhsboard))
 
 ############################.
 ## Visual interface ----
@@ -26,7 +29,7 @@ board_list <- sort(unique(hb_trend$nhsboard))
 #Height and widths as percentages to allow responsiveness
 ui <- fluidPage(style="width: 650px; height: 500px; ",
                 div(style= "width:100%",
-                    h4("Chart 2. Life expectancy and healthy life expectancy in Scotland by NHS Board"),
+                    h4("Chart 2. Life expectancy and healthy life expectancy at birth by NHS Board"),
                     div(style = "width: 50%; float: left;",
                         selectInput("measure", label = "Select a measure type",
                                     choices = c("Life expectancy", "Healthy life expectancy"), 
@@ -37,14 +40,10 @@ ui <- fluidPage(style="width: 650px; height: 500px; ",
                                 choices = board_list,
                                 selected = "Scotland")),
                 
-                # div(style = "width: 15%; float: left;",
-                #     selectInput("sex", label = "Select sex",
-                #                 choices = c("Male", "Female"), 
-                #                 selected = "Male", multiple = T)),
-                
                 
                 div(style= "width:100%; float: left;", #Main panel
                     plotlyOutput("chart", width = "100%", height = "350px"),
+                    p("note: y-axis does not start at zero"),
                     p(div(style = "width: 25%; float: left;", #Footer
                           HTML("Source: <a href='https://www.nrscotland.gov.uk/statistics-and-data/statistics/statistics-by-theme/life-expectancy' target='_blank'>NRS</a>")),
                       div(style = "width: 25%; float: left;",
@@ -60,12 +59,10 @@ server <- function(input, output) {
   output$chart <- renderPlotly({
     
     #Data for Scotland line
-    data_scot <- hb_trend %>% subset(nhsboard=="Scotland" & measure==input$measure
+    data_scot <- hb_trend %>% subset(nhsboard =="Scotland" & measure ==input$measure
                                       & sex %in% input$sex)
     #Data for Health board line
-    data_hb <- hb_trend %>% subset(nhsboard==input$nhsboard & measure==input$measure
-                                     #  & sex %in% input$sex
-                                   ) 
+    data_hb <- hb_trend %>% subset(nhsboard == input$nhsboard & measure == input$measure) 
     
     # Information to be displayed in tooltip
     tooltip <- c(paste0(input$nhsboard, " - ", data_hb$sex, "<br>",
@@ -76,7 +73,7 @@ server <- function(input, output) {
     yaxistitle <- paste0(input$measure, " (years)")
     
     # Define line colours
-    pal <- c('#0078D4', '#1E7F84')
+    pal <- c('#9B4393', '#1E7F84')
     
     # Define number of lines on chart
     num <- length(unique(data_hb$sex))
@@ -90,16 +87,14 @@ server <- function(input, output) {
     plot <- plot_ly(data = data_hb, x=~year, y = ~value, 
                     color= ~sex, colors = pal[1:num], 
                     type = "scatter", mode = 'lines+markers', 
-                    symbol= ~sex, symbols = list('circle','square'), marker = list(size= 7),
+                    symbol= ~sex, symbols = list('circle','square'), marker = list(size= 8),
                     width = 650, height = 350,
                     text=tooltip, hoverinfo="text")  %>%  
-      # add_lines(data = data_scot, y = ~value, mode = 'lines', 
-      #           name = "Scotland", line = list(color = '#000000')) %>%
       
       # Layout
       layout(annotations = list(), #It needs this because of a buggy behaviour
              yaxis = list(title = yaxistitle, 
-                          rangemode="tozero", 
+                          #rangemode="tozero", 
                           fixedrange=TRUE), 
              xaxis = list(
                title = list(text = "3 year average", standoff=20),
@@ -118,7 +113,7 @@ server <- function(input, output) {
   
   # Allow user to download data
   output$download_data <- downloadHandler(
-    filename =  'trends_in_le_and_hle_hb_data.csv', 
+    filename =  'le_and_hle_data_hb.csv', 
     content = function(file) {
       write.csv(hb_trend, file, row.names=FALSE) })
   
