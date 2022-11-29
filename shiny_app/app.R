@@ -20,8 +20,8 @@ library(shiny) #shiny apps
 hb_trend <- readRDS("data/le_hle_hb.rds")
 
 # Use for selection of areas
-board_list <- sort(unique(hb_trend$nhsboard[hb_trend$nhsboard != "Scotland"]))
-#board_list <- sort(unique(hb_trend$nhsboard))
+#board_list <- sort(unique(hb_trend$nhsboard[hb_trend$nhsboard != "Scotland"])) #if Scotland is in datasource
+board_list <- sort(unique(hb_trend$nhsboard))
 
 ############################.
 ## Visual interface ----
@@ -57,11 +57,8 @@ ui <- fluidPage(style="width: 650px; height: 500px; ",
 server <- function(input, output) {
   
   output$chart <- renderPlotly({
-    
-    #Data for Scotland line
-    data_scot <- hb_trend %>% subset(nhsboard =="Scotland" & measure ==input$measure
-                                      & sex %in% input$sex)
-    #Data for Health board line
+
+    #Data for NHS Board line
     data_hb <- hb_trend %>% subset(nhsboard == input$nhsboard & measure == input$measure) 
     
     # Information to be displayed in tooltip
@@ -69,7 +66,7 @@ server <- function(input, output) {
                         "Time period (3 year average): ", data_hb$year, "<br>",
                         input$measure, " (years): ", data_hb$value, "<br>"))
     
-    # y-axis title - add to layout if not dynamic
+    # y-axis title
     yaxistitle <- paste0(input$measure, " (years)")
     
     # Define line colours

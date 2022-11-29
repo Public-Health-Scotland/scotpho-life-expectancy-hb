@@ -1,8 +1,16 @@
 # scotpho-life-expectancy-hb
-This code produces the shiny app chart in the following section of the ScotPHO website:
-Population Dynamics > Deaths and life expectancy > Data > NHS Boards section of the ScotPHO website. 
+
+This code produces the shiny app chart in the Deaths and life expectancy > Data > NHS Boards section of the ScotPHO website.
 
 Data is sourced from:
-•	LE by health board: ScotPHO Profiles tool. Data covers 2001-2003 to 2018 to 2020.
-•	HLE by health board: https://www.nrscotland.gov.uk/statistics-and-data/statistics/statistics-by-theme/life-expectancy/healthy-life-expectancy-in-scotland/2018-2020 > Open Data > HLE at 0 years + Count + Female/Male (has to be done separately) + All SIMD quintiles + ALL Urban Rural Classification, filtered by Health Board Areas.
+•	LE by NHS Board: https://statistics.gov.scot/resource?uri=http%3A%2F%2Fstatistics.gov.scot%2Fdata%2FLife-Expectancy
+•	HLE by NHS Board: https://statistics.gov.scot/resource?uri=http%3A%2F%2Fstatistics.gov.scot%2Fdata%2Fhealthy-life-expectancy
+
+To update the shiny app:
+
+1. Run extract_data.R to extract the data from the SG opendata platform. 
+2. Check the output saved here: 
+\\stats\ScotPHO\Life Expectancy\HLE ScotPHO Web Section\Scotland
+3. Run the shiny app locally to check it has updated as expected
+3. Deploy app
 
