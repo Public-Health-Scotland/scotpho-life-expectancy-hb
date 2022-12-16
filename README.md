@@ -10,7 +10,7 @@ To update the shiny app:
 
 1. Run extract_data.R to extract the data from the SG opendata platform. 
 2. Check the output saved here: 
-\\stats\ScotPHO\Life Expectancy\HLE ScotPHO Web Section\Scotland
+\\stats\ScotPHO\Website\Topics\Life expectancy\YYYYMM_update
 3. Run the shiny app locally to check it has updated as expected
-3. Deploy app
+4. Deploy app
 

@@ -72,6 +72,13 @@ server <- function(input, output) {
     # Define line colours
     pal <- c('#9B4393', '#1E7F84')
     
+    # set number of ticks depending on measure selected
+    if (input$measure == "Life expectancy") 
+      
+    {tick_freq <- 2}
+    
+    else {tick_freq <- 1}
+    
     # Define number of lines on chart
     num <- length(unique(data_hb$sex))
     
@@ -95,6 +102,7 @@ server <- function(input, output) {
                           fixedrange=TRUE), 
              xaxis = list(
                title = list(text = "3 year average", standoff=20),
+               dtick = tick_freq,
                fixedrange=TRUE#, 
                #tickangle = 0
                ),
