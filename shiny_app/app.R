@@ -29,7 +29,7 @@ board_list <- sort(unique(hb_trend$nhsboard))
 #Height and widths as percentages to allow responsiveness
 ui <- fluidPage(style="width: 650px; height: 500px; ",
                 div(style= "width:100%",
-                    h4("Chart 2. Life expectancy and healthy life expectancy at birth by NHS Board"),
+                    h4("Chart 1. Life expectancy and healthy life expectancy at birth by NHS Board"),
                     div(style = "width: 50%; float: left;",
                         selectInput("measure", label = "Select a measure type",
                                     choices = c("Life expectancy", "Healthy life expectancy"), 
@@ -61,6 +61,9 @@ server <- function(input, output) {
     #Data for NHS Board line
     data_hb <- hb_trend %>% subset(nhsboard == input$nhsboard & measure == input$measure) 
     
+    # Define number of lines on chart
+    num <- length(unique(data_hb$sex))    
+    
     # Information to be displayed in tooltip
     tooltip <- c(paste0(input$nhsboard, " - ", data_hb$sex, "<br>",
                         "Time period (3 year average): ", data_hb$year, "<br>",
@@ -68,19 +71,19 @@ server <- function(input, output) {
     
     # y-axis title
     yaxistitle <- paste0(input$measure, " (years)")
-    
+
+    # set number of ticks depending on measure selected
+    if (input$measure == "Life expectancy")
+
+    {tick_freq <- 2}
+
+    else {tick_freq <- 1}
+# 
+#     # Define number of lines on chart
+#     num <- length(unique(data_hb$sex))
+
     # Define line colours
     pal <- c('#9B4393', '#1E7F84')
-    
-    # set number of ticks depending on measure selected
-    if (input$measure == "Life expectancy") 
-      
-    {tick_freq <- 2}
-    
-    else {tick_freq <- 1}
-    
-    # Define number of lines on chart
-    num <- length(unique(data_hb$sex))
     
     # Buttons to remove from plot
     bttn_remove <-  list('select2d', 'lasso2d', 'zoomIn2d', 'zoomOut2d',
