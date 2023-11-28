@@ -62,6 +62,23 @@ le = ods_dataset("Life-Expectancy", refPeriod = date_range_le, geography = "hb",
   select(c("nhsboard", "year", "measure", "value", "sex")) %>% 
   arrange(year, nhsboard, sex)
 
+# 2020-2022 data released as provisional figures not available within stats.gov.scot
+# sourced provisional figures from NRS website and manually formatted to allow December 2023 scotpho website update
+# https://www.nrscotland.gov.uk/statistics-and-data/statistics/statistics-by-theme/life-expectancy/life-expectancy-in-scotland/life-expectancy-in-scotland-2020-2022
+# excel data from fig 5 and fig 6 saved to PHS network folder
+
+library(openxlsx)
+# open le data 
+le_2020to2022_hb <- read.xlsx("/PHI_conf/ScotPHO/Life Expectancy/Data/Source Data/NRS data/2020 to 2022 provisional life expectancy from NRS website.xlsx", sheet = 1) %>%
+  filter(substr(code,1,3) =="S08") %>%
+  select(areaname,year,measure,sex,le) %>%
+  rename(value=le, nhsboard=areaname)
+
+# combine stats.gov data with t
+le <- rbind(le, le_2020to2022_hb) %>%   arrange(year, nhsboard, sex)
+
+
+
 
 ###############################################.
 # Healthy life expectancy data by HB
@@ -88,7 +105,8 @@ hle = ods_dataset("healthy-life-expectancy", refPeriod = date_range_hle, geograp
 
 
 # combine datasets
-le_hle <- rbind(le, hle)
+le_hle <- rbind(le, hle) %>%
+  mutate(value=round(value,2))
 
 # save as csv
 write_csv(le_hle, paste0(data_folder, "le_hle_hb.csv"))

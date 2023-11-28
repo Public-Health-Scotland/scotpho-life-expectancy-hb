@@ -44,6 +44,8 @@ ui <- fluidPage(style="width: 650px; height: 500px; ",
                 div(style= "width:100%; float: left;", #Main panel
                     plotlyOutput("chart", width = "100%", height = "350px"),
                     p("note: y-axis does not start at zero"),
+                    p("2020-2022 Life expectancy estimates are provisional"),
+                    p("Publication of 2020-2022 Healthy life expectancy delayed until 2024"),
                     p(div(style = "width: 25%; float: left;", #Footer
                           HTML("Source: <a href='https://www.nrscotland.gov.uk/statistics-and-data/statistics/statistics-by-theme/life-expectancy' target='_blank'>NRS</a>")),
                       div(style = "width: 25%; float: left;",
