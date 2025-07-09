@@ -27,7 +27,7 @@ Sys.umask("006")
 shiny_folder <- "/PHI_conf/ScotPHO/1.Analysts_space/Vicky/scotpho-life-expectancy-hb/shiny_app/data/"
 
 # UPDATE data file location
-data_folder <- "/PHI_conf/ScotPHO/Website/Topics/Life expectancy/202303_update/"
+data_folder <- "/PHI_conf/ScotPHO/Website/Topics/Life expectancy/202507_update/"
 
 
 # parameters used to filter the opendata
@@ -46,7 +46,7 @@ ods_structure("Life-Expectancy") # see structure and variables of this dataset
 date_range_le <- c("2001-2003", "2002-2004", "2003-2005", "2004-2006", "2005-2007",
                    "2006-2008", "2007-2009", "2008-2010", "2009-2011", "2010-2012",
                    "2011-2013", "2012-2014", "2013-2015", "2014-2016", "2015-2017", 
-                   "2016-2018", "2017-2019", "2018-2020", "2019-2021") # add most recent year
+                   "2016-2018", "2017-2019", "2018-2020", "2019-2021", "2020-2022","2021-2023") # add most recent year
 
 # extract data
 le = ods_dataset("Life-Expectancy", refPeriod = date_range_le, geography = "hb",
@@ -62,20 +62,21 @@ le = ods_dataset("Life-Expectancy", refPeriod = date_range_le, geography = "hb",
   select(c("nhsboard", "year", "measure", "value", "sex")) %>% 
   arrange(year, nhsboard, sex)
 
+#All data now in stats.gov.scot but leaving script below in case of delays(which have been common)
 # 2020-2022 data released as provisional figures not available within stats.gov.scot
 # sourced provisional figures from NRS website and manually formatted to allow December 2023 scotpho website update
 # https://www.nrscotland.gov.uk/statistics-and-data/statistics/statistics-by-theme/life-expectancy/life-expectancy-in-scotland/life-expectancy-in-scotland-2020-2022
 # excel data from fig 5 and fig 6 saved to PHS network folder
-
-library(openxlsx)
-# open le data 
-le_2020to2022_hb <- read.xlsx("/PHI_conf/ScotPHO/Life Expectancy/Data/Source Data/NRS data/2020 to 2022 provisional life expectancy from NRS website.xlsx", sheet = 1) %>%
-  filter(substr(code,1,3) =="S08") %>%
-  select(areaname,year,measure,sex,le) %>%
-  rename(value=le, nhsboard=areaname)
-
-# combine stats.gov data with t
-le <- rbind(le, le_2020to2022_hb) %>%   arrange(year, nhsboard, sex)
+# 
+# library(openxlsx)
+# # open le data 
+# le_2020to2022_hb <- read.xlsx("/PHI_conf/ScotPHO/Life Expectancy/Data/Source Data/NRS data/2020 to 2022 provisional life expectancy from NRS website.xlsx", sheet = 1) %>%
+#   filter(substr(code,1,3) =="S08") %>%
+#   select(areaname,year,measure,sex,le) %>%
+#   rename(value=le, nhsboard=areaname)
+# 
+# # combine stats.gov data with t
+# le <- rbind(le, le_2020to2022_hb) %>%   arrange(year, nhsboard, sex)
 
 
 
