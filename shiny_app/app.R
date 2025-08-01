@@ -21,7 +21,7 @@ hb_trend <- readRDS("data/le_hle_hb.rds")
 
 # Use for selection of areas
 #board_list <- sort(unique(hb_trend$nhsboard[hb_trend$nhsboard != "Scotland"])) #if Scotland is in datasource
-board_list <- sort(unique(hb_trend$nhsboard))
+board_list <- sort(unique(hb_trend$areaname))
 
 ############################.
 ## Visual interface ----
@@ -38,14 +38,15 @@ ui <- fluidPage(style="width: 650px; height: 500px; ",
                 div(style = "width: 50%; float: left;",
                     selectInput("nhsboard", label = "Select NHS Board", 
                                 choices = board_list,
-                                selected = "Scotland")),
+                                selected = "Ayrshire and Arran")),
                 
                 
                 div(style= "width:100%; float: left;", #Main panel
+                    (div(title="Show or hide the 95% confidence intervals for the data selected.", # tooltip
+                         checkboxInput("ci_trend", label = "95% confidence intervals", value = FALSE))),
                     plotlyOutput("chart", width = "100%", height = "350px"),
-                    p("Note: y-axis does not start at zero"),
-                    p("Latest available healthy life expectancy estimates are 2019-2021, updated figures are expected August 2025"),
-                    p(div(style = "width: 25%; float: left;", #Footer
+                    h5(uiOutput("axis_note")),
+                   p(div(style = "width: 25%; float: left;", #Footer
                           HTML("Source: <a href='https://www.nrscotland.gov.uk/statistics-and-data/births-deaths-marriages-and-life-expectancy/#' target='_blank'>NRS</a>")),
                       div(style = "width: 25%; float: left;",
                           downloadLink('download_data', 'Download data')))
@@ -57,10 +58,19 @@ ui <- fluidPage(style="width: 650px; height: 500px; ",
 ############################.
 server <- function(input, output) {
   
+  # adds a note to highlight that axis does not start at zero for some measures
+  output$axis_note <- renderText({
+    
+    axis_note <- paste0("Note: y-axis does not start at zero <br> ",
+                        "HLE time series produced using ",
+                        tags$a("revised methodology",
+                               href = "https://osr.statisticsauthority.gov.uk/correspondence/alan-ferrier-to-ed-humpherson-temporary-suspension-of-accredited-official-statistics-status-of-national-records-scotlands-healthy-life-expectancy-statistics/", target = "_blank"))
+  })
+  
   output$chart <- renderPlotly({
 
     #Data for NHS Board line
-    data_hb <- hb_trend %>% subset(nhsboard == input$nhsboard & measure == input$measure) 
+    data_hb <- hb_trend %>% subset(areaname == input$nhsboard & measure == input$measure) 
     
     # Define number of lines on chart
     num <- length(unique(data_hb$sex))    
@@ -116,6 +126,16 @@ server <- function(input, output) {
              legend = list(orientation = "h", x=0, y=1.2)) %>% 
       config(displayModeBar= T, displaylogo = F, editable =F, modeBarButtonsToRemove = bttn_remove) 
     # taking out plotly logo and collaborate button
+    
+    #Adding confidence intervals depending on user input
+    if (input$ci_trend == TRUE) {
+      plot %>% 
+        add_ribbons(data = data_hb, ymin = ~lci, ymax = ~uci, showlegend = F,
+                    opacity = 0.2) 
+      
+    } else if (input$ci_trend == FALSE) {
+      plot
+    }    
     
   }) 
   

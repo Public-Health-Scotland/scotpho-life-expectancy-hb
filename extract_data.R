@@ -7,7 +7,7 @@
 # install.packages("devtools")
 
 # install the opendata scotland r package which communicates with the statistics.gov wesbite api
-#devtools::install_github("datasciencescotland/opendatascot")
+# devtools::install_github("datasciencescotland/opendatascot")
 
 #install phs methods - with new posit workbench requires bespoke installation to ensure phsmethods package can be installed
 #install.packages("gdata", repos = c("https://ppm.publichealthscotland.org/phs-cran/latest"))
@@ -17,24 +17,22 @@ library(opendatascot) # to extract from statistics.gov
 library(phsmethods)   # to add location names
 library(readr)        # to write csv
 library(dplyr)        # to get %>% operator
+library(tidyr)      # pivot wider
 # datasets <- ods_all_datasets() # to see available datasets on statistic.gov.scot
 
 # Setting file permissions to anyone to allow writing/overwriting of project files
 Sys.umask("006")
 
-  
 # UPDATE the analyst's folder - where data should be saved for shiny app to run
 shiny_folder <- "/PHI_conf/ScotPHO/1.Analysts_space/Vicky/scotpho-life-expectancy-hb/shiny_app/data/"
 
 # UPDATE data file location
 data_folder <- "/PHI_conf/ScotPHO/Website/Topics/Life expectancy/202507_update/"
 
-
 # parameters used to filter the opendata
 simd <- c("all")
 urban_rural <- c("all")
-age_select <- "0-years"
-
+age_select <- "0-years" #warning this filter restricts dataset "0-years" and "90-years"
 
 ###############################################.
 # Life expectancy data by HB
@@ -51,16 +49,20 @@ date_range_le <- c("2001-2003", "2002-2004", "2003-2005", "2004-2006", "2005-200
 # extract data
 le = ods_dataset("Life-Expectancy", refPeriod = date_range_le, geography = "hb",
                   urbanRuralClassification = urban_rural,
-                  simdQuintiles = simd, measureType = "count") %>%
+                  simdQuintiles = simd, age=age_select) %>%
   setNames(tolower(names(.))) %>%
-  rename("hb" = refarea, "year" = refperiod) %>% 
-  filter(age == age_select) %>% 
-  mutate(measure = "Life expectancy") %>% 
-  mutate(nhsboard = match_area(hb),
+  rename("areacode" = refarea, "year" = refperiod) %>% 
+  filter(age == age_select) %>% # reapply filter even though its run in opendata extract it must be reapplied
+  mutate(areaname = match_area(areacode),
+         measure = "Life expectancy",
          sex = case_when(sex == "male" ~ "Male",
-                         sex == "female" ~ "Female")) %>% 
-  select(c("nhsboard", "year", "measure", "value", "sex")) %>% 
-  arrange(year, nhsboard, sex)
+                         sex == "female" ~ "Female")) %>%
+  select(c("year","areaname","areacode","measure", "sex", "measuretype", "value")) %>%
+  pivot_wider(names_from="measuretype", values_from="value") %>%
+  rename(value = count,
+         lci = "95-lower-confidence-limit",
+         uci = "95-upper-confidence-limit") |>
+  arrange(year, areaname, sex)
 
 #All data now in stats.gov.scot but leaving script below in case of delays(which have been common)
 # 2020-2022 data released as provisional figures not available within stats.gov.scot
@@ -79,34 +81,48 @@ le = ods_dataset("Life-Expectancy", refPeriod = date_range_le, geography = "hb",
 # le <- rbind(le, le_2020to2022_hb) %>%   arrange(year, nhsboard, sex)
 
 
-
-
 ###############################################.
 # Healthy life expectancy data by HB
 ###############################################.
 
-ods_structure("healthy-life-expectancy") # see structure and variables of this dataset
+#Read in hle data sourced from NRS/ONS publication
+#csv file prepared in a the Scotland level repo
 
-# date range for HLE
-date_range_hle <- c("2015-2017", "2016-2018", "2017-2019", "2018-2020", "2019-2021") # add most recent year
+hle_data <- read.csv(paste0(data_folder, "hle_nhsboard.csv")) |>
+  select(-areaname) |>
+  mutate(areaname = match_area(areacode)) #match areanames as used by phs
 
-# extract data
-hle = ods_dataset("healthy-life-expectancy", refPeriod = date_range_hle, geography = "hb",
-                  urbanRuralClassification = urban_rural,
-                  simdQuintiles = simd, measureType = "count") %>%
-  setNames(tolower(names(.))) %>%
-  rename("hb" = refarea, "year" = refperiod) %>% 
-  filter(age == age_select) %>% 
-  mutate(measure = "Healthy life expectancy") %>% 
-  mutate(nhsboard = match_area(hb),
-         sex = case_when(sex == "male" ~ "Male",
-                         sex == "female" ~ "Female")) %>% 
-  select(c("nhsboard", "year", "measure", "value", "sex")) %>% 
-  arrange(year, nhsboard, sex)
+
+# PRE-July 2025 calculation methodology change HLE data could be sourced from statistics.gov
+# Leaving the syntax for data extraction but commented out in case the new data is made available in opendata tool in future
+# or in case there is a need to source historic data.
+
+# ods_structure("healthy-life-expectancy") # see structure and variables of this dataset
+# 
+# # date range for HLE
+# date_range_hle <- c("2015-2017", "2016-2018", "2017-2019", "2018-2020", "2019-2021") # add most recent year
+# 
+# # extract data
+# hle = ods_dataset("healthy-life-expectancy", refPeriod = date_range_hle, geography = "hb",
+#                   urbanRuralClassification = urban_rural,
+#                   simdQuintiles = simd, age=age_select) %>%
+#   setNames(tolower(names(.))) %>%
+#   rename("hb" = refarea, "year" = refperiod) %>% 
+#   filter(age == age_select) %>%
+#   mutate(nhsboard = match_area(hb),
+#          measure = "Healthy life expectancy",
+#          sex = case_when(sex == "male" ~ "Male",
+#                          sex == "female" ~ "Female")) |> 
+#   select(c("nhsboard","hb","year","sex","measuretype","measure", "value")) %>% 
+#   pivot_wider(names_from="measuretype" ,values_from="value") |>
+#   rename(value = count,
+#          lci = "95-lower-confidence-limit",
+#          uci = "95-upper-confidence-limit") |>
+#   arrange(year, nhsboard, sex)
 
 
 # combine datasets
-le_hle <- rbind(le, hle) %>%
+le_hle <- rbind(le, hle_data) %>%
   mutate(value=round(value,2))
 
 # save as csv
